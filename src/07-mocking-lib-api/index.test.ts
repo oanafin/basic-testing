@@ -1,17 +1,52 @@
-// Uncomment the code below and write your tests
-/* import axios from 'axios';
-import { throttledGetDataFromApi } from './index'; */
+import axios, { AxiosInstance } from 'axios';
+import { throttledGetDataFromApi } from './index';
+
+jest.mock('axios');
+const mockedAxios = axios as jest.Mocked<typeof axios>;
 
 describe('throttledGetDataFromApi', () => {
-  test('should create instance with provided base url', async () => {
-    // Write your test here
+  let axiosClientMock: AxiosInstance;
+
+  beforeEach(() => {
+    axiosClientMock = {
+      defaults: {},
+      interceptors: {
+        request: { use: jest.fn() },
+        response: { use: jest.fn() },
+      },
+      get: jest.fn(),
+      delete: jest.fn(),
+      head: jest.fn(),
+      options: jest.fn(),
+      post: jest.fn(),
+      put: jest.fn(),
+      patch: jest.fn(),
+      getUri: jest.fn(),
+    } as unknown as AxiosInstance;
+
+    mockedAxios.create.mockReturnValue(axiosClientMock);
+  });
+
+  afterEach(() => {
+    jest.clearAllMocks();
   });
 
   test('should perform request to correct provided url', async () => {
-    // Write your test here
-  });
+    jest.useFakeTimers();
 
-  test('should return response data', async () => {
-    // Write your test here
+    const relativePath = '/posts/1';
+    const mockData = { id: 1, title: 'Test Title' };
+
+    (axiosClientMock.get as jest.Mock).mockResolvedValueOnce({
+      data: mockData,
+    });
+
+    throttledGetDataFromApi(relativePath);
+
+    jest.runAllTimers();
+
+    expect(axiosClientMock.get).toHaveBeenCalledWith(relativePath);
+
+    jest.useRealTimers();
   });
 });
